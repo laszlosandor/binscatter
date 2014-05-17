@@ -652,8 +652,12 @@ program define binscatter, eclass sortpreserve
 					if !missing(`coef_quad',`coef_lin',`coef_cons') {
 						local leftbound=`fitline_bounds'[1,`counter_rd']
 						local rightbound=`fitline_bounds'[1,`counter_rd'+1]
-					
-						local fits `fits' (function `coef_quad'*x^2+`coef_lin'*x+`coef_cons', range(`leftbound' `rightbound') lcolor(`: word `c' of `lcolors''))
+					    if (`"`linetype'"'=="qfit") {
+						    local fits `fits' (function `coef_quad'*x^2+`coef_lin'*x+`coef_cons', range(`leftbound' `rightbound') lcolor(`: word `c' of `lcolors''))
+					    }
+					    else if (`"`linetype'"'=="lfit") {
+					        local fits `fits' (scatteri `=`coef_lin'*`leftbound'+`coef_cons'' `leftbound' `=`coef_lin'*`rightbound'+`coef_cons'' `rightbound', recast(line) lcolor(`: word `c' of `lcolors''))
+					    }
 					}
 				}
 			}
