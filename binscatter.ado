@@ -12,7 +12,7 @@ human-readable summary can be accessed at http://creativecommons.org/publicdomai
 
 * XX: add percentiles() option to documentation
 
-program define binscatter, eclass sortpreserve
+program define binscatter, eclass // sortpreserve
 	version 12.1
 	
 	syntax varlist(min=2 numeric) [if] [in] [aweight fweight], [by(varname) ///
