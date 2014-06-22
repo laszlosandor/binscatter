@@ -981,8 +981,8 @@ program define fastxtile, rclass
 	}
 
 	* Pick data type for quantile variable
-	if (`nquantiles'<=100) local qtype byte
-	else if (`nquantiles'<=32,740) local qtype int
+	if (`nquantiles'<=maxbyte()) local qtype byte
+	else if (`nquantiles'<=maxint()) local qtype int
 	else local qtype long
 
 	* Create quantile variable
