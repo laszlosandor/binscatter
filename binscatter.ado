@@ -986,8 +986,19 @@ program define fastxtile, rclass
 	else local qtype long
 
 	* Create quantile variable
-	local cutvalcommalist : subinstr local cutvallist " " ",", all
-	qui gen `qtype' `varlist'=1+irecode(`exp',`cutvalcommalist') if `touse'
+    qui gen `qtype' `varlist'=1
+	tokenize `cutvallist'
+	local quantnum 1
+	while `quantnum' < `nquantiles' {
+	    local expcount 1
+	    local cutvalcommalist ""
+	    while `expcount'<249 & `quantnum' < `nquantiles' {
+    	    local cutvalcommalist `cutvalcommalist',``quantnum''
+    		return scalar r`quantnum' = ``quantnum++''
+    	    local expcount `++expcount'
+	    }
+    	qui replace `varlist'=`varlist'+irecode(`exp'`cutvalcommalist') if `touse'
+    }
 	label var `varlist' "`nquantiles' quantiles of `exp'"
 	
 	* Return values
@@ -995,11 +1006,6 @@ program define fastxtile, rclass
 	else return scalar n = .
 	
 	return scalar N = `popsize'
-	
-	tokenize `"`cutvallist'"'
-	forvalues i=`=`nquantiles'-1'(-1)1 {
-		return scalar r`i' = ``i''
-	}
 
 end
 
