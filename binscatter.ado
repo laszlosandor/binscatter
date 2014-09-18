@@ -198,7 +198,7 @@ program define binscatter, eclass // sortpreserve
 		local firstloop=1
 		foreach var of varlist `x_var' `y_vars' {
 			tempvar residvar
-			`regtype' `var' `controls' `wt' if `touse', `absorb'
+			_regress `var' `controls' `wt' if `touse', `absorb'
 			predict `residvar' if e(sample), residuals
 			if ("`addmean'"!="noaddmean") {
 				summarize `var' `wt' if `touse', meanonly
@@ -288,8 +288,8 @@ program define binscatter, eclass // sortpreserve
 					}
 					
 					* perform regression
-					if ("`reg_verbosity'"=="quietly") capture reg `depvar' `x_r2' `x_r' `wt' if `conds'
-					else capture noisily reg `depvar' `x_r2' `x_r' `wt' if `conds'
+					if ("`reg_verbosity'"=="quietly") capture _regress `depvar' `x_r2' `x_r' `wt' if `conds'
+					else capture noisily _regress `depvar' `x_r2' `x_r' `wt' if `conds'
 					
 					* store results
 					if (_rc==0) matrix e_b_temp=e(b)
