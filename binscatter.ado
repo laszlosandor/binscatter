@@ -175,11 +175,11 @@ program define binscatter, eclass sortpreserve
 	
 		* Parse absorb to define the type of regression to be used
 		if `"`absorb'"'!="" {
-			local regtype "areg"
+			local regtype "_regress"
 			local absorb "absorb(`absorb')"
 		}
 		else {
-			local regtype "reg"
+			local regtype "_regres"
 		}
 	
 		* Generate residuals
@@ -277,8 +277,8 @@ program define binscatter, eclass sortpreserve
 					}
 					
 					* perform regression
-					if ("`reg_verbosity'"=="quietly") capture reg `depvar' `x_r2' `x_r' `wt' if `conds'
-					else capture noisily reg `depvar' `x_r2' `x_r' `wt' if `conds'
+					if ("`reg_verbosity'"=="quietly") capture _regress `depvar' `x_r2' `x_r' `wt' if `conds'
+					else capture noisily _regress `depvar' `x_r2' `x_r' `wt' if `conds'
 					
 					* store results
 					if (_rc==0) matrix e_b_temp=e(b)
