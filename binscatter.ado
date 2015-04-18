@@ -136,6 +136,10 @@ program define binscatter, eclass sortpreserve
 	markout `touse' `by' `xq' `controls' `absorb', strok
 	qui count if `touse'
 	local samplesize=r(N)
+    if `samplesize' == 0{
+    	display as error "no observations" 
+    	exit 2000
+    }
 	local touse_first=_N-`samplesize'+1
 	local touse_last=_N
 
