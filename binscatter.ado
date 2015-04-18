@@ -179,7 +179,7 @@ program define binscatter, eclass sortpreserve
 			local absorb "absorb(`absorb')"
 		}
 		else {
-			local regtype "_regres"
+			local regtype "_regress"
 		}
 	
 		* Generate residuals
