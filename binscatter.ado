@@ -170,32 +170,8 @@ program define binscatter, eclass sortpreserve
 	
 
 	****** Create residuals  ******
-	if (`"`controls'`absorb'"'!="" & `: word count `absorb''>1) {
-		cap which hdfe.ado
-		if _rc {
-			di as error "hdfe.ado required when using multiple absorb variables: {stata ssc install hdfe}"
-			exit 111
-		}
-		hdfe `x_var' `y_vars' `wt' if `touse', partial(`controls') absorb(`absorb') gen(__resid__)
-		if ("`addmean'"!="noaddmean") {
-			foreach var of varlist `x_var' `y_vars' {
-				summarize `var' `wt' if `touse', meanonly
-				qui replace __resid__`var' = __resid__`var' + r(mean)
-			}
-		}
-		* possible simplification: have three options: stub() replace generate()
-		* possible improvement: there may be some limitations on binscatter's by(); maybe hdfe can lift them (or they are intended?)
-		tempvar x_r
-		rename __resid__`x_var' `x_r'
-		label variable `x_r' "`x_var'"
-		foreach var of varlist `y_vars' {
-			tempvar residvar
-			rename __resid__`var' `residvar'
-			label variable `residvar' "`var'"
-			local y_vars_r `y_vars_r' `residvar'
-		}
-	}
-	else if (`"`controls'`absorb'"'!="") quietly {
+	
+	if (`"`controls'`absorb'"'!="") quietly {
 	
 		* Parse absorb to define the type of regression to be used
 		if `"`absorb'"'!="" {
