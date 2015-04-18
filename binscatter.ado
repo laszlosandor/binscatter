@@ -587,28 +587,29 @@ program define binscatter, eclass sortpreserve
 			if !missing(`xval',`yval') {
 				local ++counter_series
 				local scatters `scatters' (scatteri
-				if ("`savedata'"!="") {
-					if ("`by'"=="") local savedata_scatters `savedata_scatters' (scatter `depvar' `x_var'
-					else local savedata_scatters `savedata_scatters' (scatter `depvar'_by`counter_by' `x_var'_by`counter_by'
-				}
-			}
-			else {
-				* skip the rest of this loop iteration
-				continue
-			}
-			
-			while (`xval'!=. & `yval'!=.) {
-				local scatters `scatters' `yval' `xval'
-			
-				local ++row
-				local xval=`y`counter_depvar'_scatterpts'[`row',`xind']
-				local yval=`y`counter_depvar'_scatterpts'[`row',`yind']
-			}
-			
-			* Add options
-			local scatter_options `connect' mcolor("`: word `c' of `mcolors''") lcolor("`: word `c' of `lcolors''") `symbol_prefix'`: word `c' of `msymbols''`symbol_suffix'
-			local scatters `scatters', `scatter_options')
-			if ("`savedata'"!="") local savedata_scatters `savedata_scatters', `scatter_options')
+					if ("`savedata'"!="") {
+						if ("`by'"=="") local savedata_scatters `savedata_scatters' (scatter `depvar' `x_var'
+							else local savedata_scatters `savedata_scatters' (scatter `depvar'_by`counter_by' `x_var'_by`counter_by'
+						}
+					}
+					else {
+						* skip the rest of this loop iteration
+						continue
+					}
+
+					while (`xval'!=. & `yval'!=.) {
+						local scatters `scatters' `yval' `xval'
+
+						local ++row
+						local xval=`y`counter_depvar'_scatterpts'[`row',`xind']
+						local yval=`y`counter_depvar'_scatterpts'[`row',`yind']
+					}
+
+					* Add options
+					local scatter_options `connect' mcolor("`: word `c' of `mcolors''") lcolor("`: word `c' of `lcolors''") `symbol_prefix'`: word `c' of `msymbols''`symbol_suffix'
+					local scatters `scatters', `scatter_options')
+if ("`savedata'"!="") local savedata_scatters `savedata_scatters', `scatter_options')
+
 
 * Add legend
 if "`by'"=="" {
@@ -692,12 +693,7 @@ if inlist(`"`linetype'"',"lfit","qfit") {
 					local leftbound=`fitline_bounds'[1,`counter_rd']
 					local rightbound=`fitline_bounds'[1,`counter_rd'+1]
 					
-<<<<<<< HEAD
 					local fits `fits' (function `coef_quad'*x^2+`coef_lin'*x+`coef_cons', range(`leftbound' `rightbound') lcolor("`: word `c' of `lcolors''"))
-=======
-						local fits `fits' (function `coef_quad'*x^2+`coef_lin'*x+`coef_cons', range(`leftbound' `rightbound') lcolor("`: word `c' of `lcolors''"))
-					}
->>>>>>> f3a1cc9... Update binscatter.ado
 				}
 			}
 		}
