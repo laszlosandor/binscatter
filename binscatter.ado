@@ -609,23 +609,16 @@ program define binscatter, eclass sortpreserve
 			local scatter_options `connect' mcolor("`: word `c' of `mcolors''") lcolor("`: word `c' of `lcolors''") `symbol_prefix'`: word `c' of `msymbols''`symbol_suffix'
 			local scatters `scatters', `scatter_options')
 			if ("`savedata'"!="") local savedata_scatters `savedata_scatters', `scatter_options')
-			* Add legend
-			if "`by'"=="" {
-				if (`ynum'==1) local legend_labels off
-				else local legend_labels `legend_labels' lab(`counter_series' `depvar')
-			}
-			else {
-				if ("`bylabel'"=="") local byvalname=`byval'
-				else {
-					local byvalname `: label `bylabel' `byval''
-				}
-			
-				if (`ynum'==1) local legend_labels `legend_labels' lab(`counter_series' `byvalname')
-				else local legend_labels `legend_labels' lab(`counter_series' `depvar': `byvalname')
-				local bylegendtitle  legend(subtitle("`byvarname'"))
-			}
-			if ("`by'"!="" | `ynum'>1) local order `order' `counter_series'
-		}
+
+* Add legend
+if "`by'"=="" {
+	if (`ynum'==1) local legend_labels off
+	else local legend_labels `legend_labels' lab(`counter_series' `depvar')
+}
+else {
+	if ("`bylabel'"=="") local byvalname=`byval'
+	else {
+		local byvalname `: label `bylabel' `byval''
 	}
 
 	if (`ynum'==1) local legend_labels `legend_labels' lab(`counter_series' `byvarname'=`byvalname')
@@ -698,35 +691,18 @@ if inlist(`"`linetype'"',"lfit","qfit") {
 				if !missing(`coef_quad',`coef_lin',`coef_cons') {
 					local leftbound=`fitline_bounds'[1,`counter_rd']
 					local rightbound=`fitline_bounds'[1,`counter_rd'+1]
+					
+<<<<<<< HEAD
 					local fits `fits' (function `coef_quad'*x^2+`coef_lin'*x+`coef_cons', range(`leftbound' `rightbound') lcolor("`: word `c' of `lcolors''"))
+=======
+						local fits `fits' (function `coef_quad'*x^2+`coef_lin'*x+`coef_cons', range(`leftbound' `rightbound') lcolor("`: word `c' of `lcolors''"))
+					}
+>>>>>>> f3a1cc9... Update binscatter.ado
 				}
 			}
 		}
 	}
 }
-=======
-	
-	* Prepare y-axis title
-	if (`ynum'==1) local ytitle `y_vars'
-	else if (`ynum'==2) local ytitle : subinstr local y_vars " " " and "
-	else local ytitle : subinstr local y_vars " " "; ", all
-
-	* Display graph
-	local graphcmd twoway `scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `bylegendtitle' `options'
-	if ("`savedata'"!="") local savedata_graphcmd twoway `savedata_scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `options'
-	`graphcmd'
-	
-	****** Save results ******
-	
-	* Save graph
-	if `"`savegraph'"'!="" {
-		* check file extension using a regular expression
-		if regexm(`"`savegraph'"',"\.[a-zA-Z0-9]+$") local graphextension=regexs(0)
-		
-		if inlist(`"`graphextension'"',".gph","") graph save `"`savegraph'"', `replace'
-		else graph export `"`savegraph'"', `replace'
-	}
->>>>>>> 4c70035... Update binscatter.ado
 
 * Prepare y-axis title
 if (`ynum'==1) local ytitle `y_vars'
