@@ -188,7 +188,7 @@ program define binscatter, eclass sortpreserve
 		foreach var of varlist `x_var' `y_vars' {
 			tempvar residvar
 			`regtype' `var' `controls' `wt' if `touse', `absorb'
-			predict `residvar' if e(sample), residuals
+			_predict `residvar' if e(sample), residuals
 			if ("`addmean'"!="noaddmean") {
 				summarize `var' `wt' if `touse', meanonly
 				replace `residvar'=`residvar'+r(mean)
