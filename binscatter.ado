@@ -144,7 +144,7 @@ program define binscatter, eclass // sortpreserve
 
 	* Mark sample (reflects the if/in conditions, and includes only nonmissing observations)
 	marksample touse
-	markout `touse' `by' `xq' `controls' `absorb', strok
+*	markout `touse' `by' `xq' `controls' `absorb', strok
 	qui count if `touse'
 	local samplesize=r(N)
 	local touse_first=_N-`samplesize'+1
@@ -341,7 +341,11 @@ program define binscatter, eclass // sortpreserve
 	* Specify and/or create the xq var, as necessary
 	if "`xq'"=="" {
 
-		if !(`touse_first'==1 & word("`:sortedby'",1)=="`x_r'") sort `touse' `x_r'
+		if !(`touse_first'==1 & word("`:sortedby'",1)=="`x_r'") {
+            sort `touse'
+            count if `touse'
+            sort `touse' `x_r' in `touse_first'/`touse_last'
+		}
 	
 		if "`discrete'"=="" { /* xq() and discrete are not specified */
 			
@@ -412,7 +416,11 @@ program define binscatter, eclass // sortpreserve
 	}
 	else {
 
-		if !(`touse_first'==1 & word("`:sortedby'",1)=="`xq'") sort `touse' `xq'
+		if !(`touse_first'==1 & word("`:sortedby'",1)=="`xq'") {
+            sort `touse'
+            count if `touse'
+            sort `touse' `xq' in `touse_first'/`touse_last'	
+		}
 		
 		* set nquantiles & boundaries
 		mata: characterize_unique_vals_sorted("`xq'",`touse_first',`touse_last',`=`samplesize'/2')
@@ -437,7 +445,10 @@ program define binscatter, eclass // sortpreserve
 	********** Compute scatter points **********
 
 	if ("`by'"!="") {
-		sort `touse' `by' `xq'
+        sort `touse'
+        count if `touse'
+        sort `touse' `by' `xq' in `touse_first'/`touse_last'	
+
 		tempname by_boundaries
 		mata: characterize_unique_vals_sorted("`by'",`touse_first',`touse_last',`bynum')
 		matrix `by_boundaries'=r(boundaries)
@@ -847,7 +858,7 @@ program define means_in_boundaries, rclass
 
 end
 
-*** copy of: version 1.21  8oct2013  Michael Stepner, stepner@mit.edu
+*** copy of: fastxtile version 1.22  24jul2014  Michael Stepner, stepner@mit.edu
 program define fastxtile, rclass
 	version 11
 
@@ -937,8 +948,9 @@ program define fastxtile, rclass
 		_pctile `exp' if `randsample' `wt', nq(`nquantiles') `altdef'
 
 		* Store quantile boundaries in list
+		local maxlist 248
 		forvalues i=1/`=`nquantiles'-1' {
-			local cutvallist `cutvallist' r(r`i')
+			local cutvallist`=ceil(`i'/`maxlist')' `cutvallist`=ceil(`i'/`maxlist')'' r(r`i')
 		}
 	}
 	else if "`cutpoints'"!="" { /***** CUTPOINTS *****/
@@ -953,18 +965,20 @@ program define fastxtile, rclass
 			exit 198
 		}
 
-		tempname cutvals
-		qui tab `cutpoints', matrow(`cutvals')
-		
-		if r(r)==0 {
+		* Find quantile boundaries from cutpoints var
+		mata: process_cutp_var("`cutpoints'")
+
+		* Store quantile boundaries in list
+		if r(nq)==1 {
 			di as error "cutpoints() all missing"
 			exit 2000
 		}
 		else {
-			local nquantiles = r(r) + 1
+			local nquantiles = r(nq)
 			
-			forvalues i=1/`r(r)' {
-				local cutvallist `cutvallist' `cutvals'[`i',1]
+			local maxlist 248
+			forvalues i=1/`=`nquantiles'-1' {
+				local cutvallist`=ceil(`i'/`maxlist')' `cutvallist`=ceil(`i'/`maxlist')'' r(r`i')
 			}
 		}
 	}
@@ -976,8 +990,10 @@ program define fastxtile, rclass
 		
 		* parse numlist
 		numlist "`cutvalues'"
-		local cutvallist `"`r(numlist)'"'
-		local nquantiles=wordcount(`"`r(numlist)'"')+1
+		local maxlist=-1
+		local cutvallist1 `"`r(numlist)'"'
+		local nquantiles : word count `r(numlist)'
+		local ++nquantiles
 	}
 
 	* Pick data type for quantile variable
@@ -986,26 +1002,30 @@ program define fastxtile, rclass
 	else local qtype long
 
 	* Create quantile variable
-    qui gen `qtype' `varlist'=1
-	tokenize `cutvallist'
-	local quantnum 1
-	while `quantnum' < `nquantiles' {
-	    local expcount 1
-	    local cutvalcommalist ""
-	    while `expcount'<249 & `quantnum' < `nquantiles' {
-    	    local cutvalcommalist `cutvalcommalist',``quantnum''
-    		return scalar r`quantnum' = ``quantnum++''
-    	    local expcount `++expcount'
-	    }
-    	qui replace `varlist'=`varlist'+irecode(`exp'`cutvalcommalist') if `touse'
-    }
-	label var `varlist' "`nquantiles' quantiles of `exp'"
+	local cutvalcommalist : subinstr local cutvallist1 " " ",", all
+	qui gen `qtype' `varlist'=1+irecode(`exp',`cutvalcommalist') if `touse'
 	
+	forvalues i=2/`=ceil((`nquantiles'-1)/`maxlist')' {
+		local cutvalcommalist : subinstr local cutvallist`i' " " ",", all
+		qui replace `varlist'=1 + `maxlist'*(`i'-1) + irecode(`exp',`cutvalcommalist') if `varlist'==1 + `maxlist'*(`i'-1)
+	}
+
+	label var `varlist' "`nquantiles' quantiles of `exp'"
+
 	* Return values
 	if ("`samplesize'"!="") return scalar n = `samplesize'
 	else return scalar n = .
 	
 	return scalar N = `popsize'
+	
+	local c=`nquantiles'-1
+	forvalues j=`=max(ceil((`nquantiles'-1)/`maxlist'),1)'(-1)1 {
+		tokenize `"`cutvallist`j''"'
+		forvalues i=`: word count `cutvallist`j'''(-1)1 {
+			return scalar r`c' = ``i''
+			local --c
+		}
+	}
 
 end
 
